@@ -1,0 +1,43 @@
+name: Contrast Shared Orchestrator POC
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      contrast_url:
+        required: true
+        type: string
+        description: The contrast url to connect to
+      contrast_org_id:
+        required: true
+        type: string
+        description: The contrast organization id
+      contrast_app_id:
+        required: true
+        type: string
+        description: The contrast application id
+    secrets:
+      CONTRAST_API_KEY:
+        required: true
+        description: The contrast API key
+      CONTRAST_AUTHORIZATION_KEY:
+        required: true
+        description: The contrast authorization key
+
+jobs:
+    run-orchestrator:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Run Contrast Orchestrator
+              shell: bash
+              run: |
+                docker run \
+                  dougjeremias489/contrast-orchestrator:latest \
+                  --contrast_url "${{ inputs.contrast_url }}" \
+                  --contrast_org_id "${{ inputs.contrast_org_id }}" \
+                  --contrast_app_id "${{ inputs.contrast_app_id }}" \
+                  --api_key "${{ secrets.CONTRAST_API_KEY }}" \
+                  --authorization_key "${{ secrets.CONTRAST_AUTHORIZATION_KEY }}"

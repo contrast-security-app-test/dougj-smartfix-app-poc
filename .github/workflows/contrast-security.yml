@@ -1,0 +1,21 @@
+name: Contrast Security Smart Workflow POC
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  call-contrast-orchestrator:
+    uses: contrast-security-app-test/dougj-smartfix-app-poc/.github/workflows/contrast-orchestrator.yml@main
+    with:
+      contrast_url: ${{ vars.CONTRAST_GITHUB_APP_HOST_URL }}
+      contrast_org_id: ${{ vars.CONTRAST_GITHUB_APP_ORG_ID }}
+      contrast_app_id: ${{ vars.CONTRAST_GITHUB_APP_ID }}
+    secrets:
+      CONTRAST_API_KEY: ${{ secrets.CONTRAST_GITHUB_APP_API_KEY }}
+      CONTRAST_AUTHORIZATION_KEY: ${{ secrets.CONTRAST_GITHUB_APP_AUTH_HEADER }}
