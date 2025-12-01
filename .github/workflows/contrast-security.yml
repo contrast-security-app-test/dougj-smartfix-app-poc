@@ -2,10 +2,8 @@ name: Contrast Security Smart Workflow POC
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
   pull_request:
+  push:
     branches:
       - main
 
