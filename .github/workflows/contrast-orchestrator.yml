@@ -27,6 +27,8 @@ on:
 jobs:
   run-orchestrator:
     runs-on: ubuntu-latest
+    outputs:
+      scans: ${{ steps.orchestrator.outputs.scans }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -35,6 +37,7 @@ jobs:
         run: docker pull dougjeremias489/contrast-orchestrator
 
       - name: Run Contrast Orchestrator
+        id: orchestrator
         shell: bash
         run: |
           docker run \
@@ -43,4 +46,19 @@ jobs:
             --contrast_org_id "${{ inputs.contrast_org_id }}" \
             --contrast_app_id "${{ inputs.contrast_app_id }}" \
             --api_key "${{ secrets.CONTRAST_API_KEY }}" \
-            --authorization_key "${{ secrets.CONTRAST_AUTHORIZATION_KEY }}"
+            --authorization_key "${{ secrets.CONTRAST_AUTHORIZATION_KEY }}" | tee output.txt
+
+          # Extract the scans from output and convert to JSON array
+          scans=$(grep "::set-output name=scans::" output.txt | cut -d':' -f5)
+          scans_json=$(echo "$scans" | jq -R 'split(",") | map(select(length > 0))')
+          echo "scans=$scans_json" >> $GITHUB_OUTPUT
+
+  run-scans:
+    needs: run-orchestrator
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        scan: ${{ fromJson(needs.run-orchestrator.outputs.scans) }}
+    steps:
+      - name: Run ${{ matrix.scan }}
+        run: echo "Running ${{ matrix.scan }}"
