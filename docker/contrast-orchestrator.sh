@@ -45,7 +45,7 @@ echo "Contrast App ID: $contrast_app_id"
 echo "Hello from contrast orchestrator!!"
 
 # Output JSON object with products array
-echo '{"products":["smartscan","smartfix"]}'
+echo '{"products":["Smart-Scan","SmartFix","Smart-SCA"]}'
 
 # Exit successfully
 exit 0

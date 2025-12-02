@@ -26,6 +26,7 @@ on:
 
 jobs:
   run-orchestrator:
+    name: Run Contrast Orchestrator
     runs-on: ubuntu-latest
     outputs:
       scans: ${{ steps.set-matrix.outputs.scans }}
@@ -57,6 +58,7 @@ jobs:
           echo "scans=$scans" >> $GITHUB_OUTPUT
 
   run-scans:
+    name: Run Contrast Smart Scans
     needs: run-orchestrator
     runs-on: ubuntu-latest
     strategy:
