@@ -44,8 +44,11 @@ echo "Contrast App ID: $contrast_app_id"
 # Print hello world
 echo "Hello from contrast orchestrator!!"
 
-# Output array of scan types as JSON to stdout
-echo "::set-output name=scans::smartscan,smartfix"
+# Output array of scan types - simple format for parsing
+echo "CONTRAST_SCANS_START"
+echo "smartscan"
+echo "smartfix"
+echo "CONTRAST_SCANS_END"
 
 # Exit successfully
 exit 0

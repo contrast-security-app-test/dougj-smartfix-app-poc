@@ -28,7 +28,7 @@ jobs:
   run-orchestrator:
     runs-on: ubuntu-latest
     outputs:
-      scans: ${{ steps.orchestrator.outputs.scans }}
+      scans: ${{ steps.set-matrix.outputs.scans }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -46,12 +46,34 @@ jobs:
             --contrast_org_id "${{ inputs.contrast_org_id }}" \
             --contrast_app_id "${{ inputs.contrast_app_id }}" \
             --api_key "${{ secrets.CONTRAST_API_KEY }}" \
-            --authorization_key "${{ secrets.CONTRAST_AUTHORIZATION_KEY }}" | tee output.txt
+            --authorization_key "${{ secrets.CONTRAST_AUTHORIZATION_KEY }}" > output.txt 2>&1
 
-          # Extract the scans from output and convert to JSON array
-          scans=$(grep "::set-output name=scans::" output.txt | cut -d':' -f5)
-          scans_json=$(echo "$scans" | jq -R 'split(",") | map(select(length > 0))')
-          echo "scans=$scans_json" >> $GITHUB_OUTPUT
+          cat output.txt
+
+      - name: Parse scans and create matrix
+        id: set-matrix
+        shell: bash
+        run: |
+          # Extract scan names between markers
+          scans=$(sed -n '/CONTRAST_SCANS_START/,/CONTRAST_SCANS_END/p' output.txt | grep -v "CONTRAST_SCANS")
+
+          # Convert to JSON array format
+          json_array="["
+          first=true
+          while IFS= read -r line; do
+            if [ ! -z "$line" ]; then
+              if [ "$first" = true ]; then
+                json_array+="\"$line\""
+                first=false
+              else
+                json_array+=",\"$line\""
+              fi
+            fi
+          done <<< "$scans"
+          json_array+="]"
+
+          echo "scans=$json_array" >> $GITHUB_OUTPUT
+          echo "Generated matrix: $json_array"
 
   run-scans:
     needs: run-orchestrator
