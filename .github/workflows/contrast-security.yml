@@ -9,6 +9,7 @@ on:
 
 jobs:
   call-contrast-orchestrator:
+    name: Run Contrast Smart Orchestrator
     uses: contrast-security-app-test/dougj-smartfix-app-poc/.github/workflows/contrast-orchestrator.yml@main
     with:
       contrast_url: ${{ vars.CONTRAST_GITHUB_APP_HOST_URL }}
