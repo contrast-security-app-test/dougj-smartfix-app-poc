@@ -28,19 +28,7 @@ jobs:
     run-orchestrator:
         runs-on: ubuntu-latest
         steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
-
-            - name: Pull Contrast Orchestrator Image
-              run: docker pull dougjeremias489/contrast-orchestrator
-
             - name: Run Contrast Orchestrator
-              shell: bash
-              run: |
-                docker run \
-                  dougjeremias489/contrast-orchestrator \
-                  --contrast_url "${{ inputs.contrast_url }}" \
-                  --contrast_org_id "${{ inputs.contrast_org_id }}" \
-                  --contrast_app_id "${{ inputs.contrast_app_id }}" \
-                  --api_key "${{ secrets.CONTRAST_API_KEY }}" \
-                  --authorization_key "${{ secrets.CONTRAST_AUTHORIZATION_KEY }}"
+              uses: docker://dougjeremias489/contrast-orchestrator:latest
+              with:
+                args: ["--contrast_url", "${{ inputs.contrast_url }}", "--contrast_org_id", "${{ inputs.contrast_org_id }}", "--contrast_app_id", "${{ inputs.contrast_app_id }}", "--api_key", "${{ secrets.CONTRAST_API_KEY }}", "--authorization_key", "${{ secrets.CONTRAST_AUTHORIZATION_KEY }}"]
