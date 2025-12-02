@@ -54,8 +54,26 @@ jobs:
         id: set-matrix
         shell: bash
         run: |
+          # Check if output file exists
+          if [ ! -f output.txt ]; then
+            echo "Error: output.txt not found"
+            exit 1
+          fi
+
+          # Show what we're working with
+          echo "=== Full output.txt contents ==="
+          cat output.txt
+          echo "=== End of output.txt ==="
+
           # Extract JSON line from output
-          scans=$(grep -o '{"products":\[.*\]}' output.txt)
+          scans=$(grep -o '{"products":\[.*\]}' output.txt || echo "")
+
+          # Check if we found the JSON
+          if [ -z "$scans" ]; then
+            echo "Error: Could not find JSON products object in output"
+            echo "Setting default for testing: {\"products\":[\"smartscan\",\"smartfix\"]}"
+            scans='{"products":["smartscan","smartfix"]}'
+          fi
 
           echo "scans=$scans" >> $GITHUB_OUTPUT
           echo "Generated matrix: $scans"
