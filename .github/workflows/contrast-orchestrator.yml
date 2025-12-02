@@ -48,39 +48,20 @@ jobs:
             --api_key "${{ secrets.CONTRAST_API_KEY }}" \
             --authorization_key "${{ secrets.CONTRAST_AUTHORIZATION_KEY }}" 2>&1 | tee output.txt
 
-          echo "=== Docker output captured ==="
-          cat output.txt
-
       - name: Parse scans and create matrix
         id: set-matrix
         shell: bash
         run: |
-          # Show what we're working with
-          echo "=== Full output.txt contents ==="
-          cat output.txt
-          echo "=== End of output.txt ==="
-
-          # Read entire file and extract JSON line
-          full_output=$(cat output.txt)
-          scans=$(echo "$full_output" | grep '{"products":' | head -1)
-
-          echo "Extracted scans value: '$scans'"
-
-          # Check if we found the JSON
-          if [ -z "$scans" ]; then
-            echo "Error: Could not find JSON products object in output"
-            scans='{"products":["smartscan","smartfix"]}'
-          fi
-
+          json_output=$(cat output.txt | grep '{"products":' | head -1)
+          scans=$(echo "$json_output" | jq -r '.products | @json')
           echo "scans=$scans" >> $GITHUB_OUTPUT
-          echo "Generated matrix: $scans"
 
   run-scans:
     needs: run-orchestrator
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        scan: ${{ fromJson(needs.run-orchestrator.outputs.scans).products }}
+        scan: ${{ fromJson(needs.run-orchestrator.outputs.scans) }}
     steps:
       - name: Run ${{ matrix.scan }}
         run: echo "Running ${{ matrix.scan }}"
