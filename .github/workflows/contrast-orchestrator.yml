@@ -54,26 +54,11 @@ jobs:
         id: set-matrix
         shell: bash
         run: |
-          # Extract scan names between markers
-          scans=$(sed -n '/CONTRAST_SCANS_START/,/CONTRAST_SCANS_END/p' output.txt | grep -v "CONTRAST_SCANS")
+          # Extract scan names between markers and convert to JSON array
+          scans=$(sed -n '/CONTRAST_SCANS_START/,/CONTRAST_SCANS_END/p' output.txt | grep -v "CONTRAST_SCANS" | jq -R -s -c 'split("\n") | map(select(length > 0))')
 
-          # Convert to JSON array format
-          json_array="["
-          first=true
-          while IFS= read -r line; do
-            if [ ! -z "$line" ]; then
-              if [ "$first" = true ]; then
-                json_array+="\"$line\""
-                first=false
-              else
-                json_array+=",\"$line\""
-              fi
-            fi
-          done <<< "$scans"
-          json_array+="]"
-
-          echo "scans=$json_array" >> $GITHUB_OUTPUT
-          echo "Generated matrix: $json_array"
+          echo "scans=$scans" >> $GITHUB_OUTPUT
+          echo "Generated matrix: $scans"
 
   run-scans:
     needs: run-orchestrator
