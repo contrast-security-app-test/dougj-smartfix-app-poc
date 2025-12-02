@@ -54,8 +54,8 @@ jobs:
         id: set-matrix
         shell: bash
         run: |
-          # Extract scan names between markers and convert to JSON array
-          scans=$(sed -n '/CONTRAST_SCANS_START/,/CONTRAST_SCANS_END/p' output.txt | grep -v "CONTRAST_SCANS" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          # Extract JSON line from output
+          scans=$(grep -o '{"products":\[.*\]}' output.txt)
 
           echo "scans=$scans" >> $GITHUB_OUTPUT
           echo "Generated matrix: $scans"
@@ -65,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        scan: ${{ fromJson(needs.run-orchestrator.outputs.scans) }}
+        scan: ${{ fromJson(needs.run-orchestrator.outputs.scans).products }}
     steps:
       - name: Run ${{ matrix.scan }}
         run: echo "Running ${{ matrix.scan }}"
