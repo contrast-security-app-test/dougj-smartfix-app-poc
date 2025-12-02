@@ -27,8 +27,6 @@ on:
 jobs:
     run-orchestrator:
         runs-on: ubuntu-latest
-        steps:
-            - name: Run Contrast Orchestrator
-              uses: docker://dougjeremias489/contrast-orchestrator:latest
-              with:
-                args: ["--contrast_url", "${{ inputs.contrast_url }}", "--contrast_org_id", "${{ inputs.contrast_org_id }}", "--contrast_app_id", "${{ inputs.contrast_app_id }}", "--api_key", "${{ secrets.CONTRAST_API_KEY }}", "--authorization_key", "${{ secrets.CONTRAST_AUTHORIZATION_KEY }}"]
+        container:
+          image: docker://dougjeremias489/contrast-orchestrator:latest
+          args: ["--contrast_url", "${{ inputs.contrast_url }}", "--contrast_org_id", "${{ inputs.contrast_org_id }}", "--contrast_app_id", "${{ inputs.contrast_app_id }}", "--api_key", "${{ secrets.CONTRAST_API_KEY }}", "--authorization_key", "${{ secrets.CONTRAST_AUTHORIZATION_KEY }}"]
