@@ -58,7 +58,7 @@ jobs:
           echo "scans=$scans" >> $GITHUB_OUTPUT
 
   run-scans:
-    name: Run Contrast Smart Scans
+    name: Run Scans
     needs: run-orchestrator
     runs-on: ubuntu-latest
     strategy:
