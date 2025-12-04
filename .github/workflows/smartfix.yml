@@ -47,8 +47,23 @@ on:
         description: The contrast authorization key
 
 jobs:
+  show_inputs:
+    name: Show Inputs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Display Inputs
+        run: |
+          echo "Contrast URL: ${{ inputs.contrast_url }}"
+          echo "Contrast Org ID: ${{ inputs.contrast_org_id }}"
+          echo "Contrast App ID: ${{ inputs.contrast_app_id }}"
+          echo "Event Name: ${{ inputs.event_name }}"
+          echo "Event Action: ${{ inputs.event_action }}"
+          echo "Event Path: ${{ inputs.event_path }}"
+          echo "Git Head Ref: ${{ inputs.git_head_ref }}"
+          echo "Base Branch: ${{ inputs.base_branch }}"
+          echo "PR Was Merged: ${{ inputs.pr_was_merged }}"
   generate_fixes:
-    name: Generate Fixes
+    name: SmartFix Generate Fixes
     runs-on: ubuntu-latest
     if: ${{ inputs.event_name == 'workflow_dispatch' || inputs.event_name == 'schedule'}}
     steps:
@@ -88,7 +103,7 @@ jobs:
 
 
   handle_pr_merge:
-    name: Handle PR Merge
+    name: SmartFix Handle PR Merge
     runs-on: ubuntu-latest
     if: ${{ (inputs.pr_was_merged == true && contains(inputs.git_head_ref, 'smartfix/remediation-') || contains(inputs.git_head_ref, 'copilot/fix-') || contains(inputs.git_head_ref, 'claude/issue-')) }}
     steps:
@@ -113,7 +128,7 @@ jobs:
           GITHUB_EVENT_PATH: ${{ inputs.event_path }}
 
   handle_pr_closed:
-    name: Handle PR Close
+    name: SmartFix Handle PR Close
     runs-on: ubuntu-latest
     if: ${{ (inputs.event_name == 'pull_request' && inputs.event_action ==  'closed' && inputs.pr_was_merged == false) && (contains(inputs.git_head_ref, 'smartfix/remediation-') || contains(inputs.git_head_ref, 'copilot/fix-') || contains(inputs.git_head_ref, 'claude/issue-')) }}
     steps:
