@@ -127,8 +127,15 @@ jobs:
     if: ${{ needs.run-orchestrator.outputs.smart-scan == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Run Smart-Scan
-        run: echo "Running Smart-Scan placeholder step!!"
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Run Step Before Smart-SCAN
+        run: echo "Hello from some in-between step if needed...."
+      - name: Run Smart-SCAN
+        uses: docker://dougjeremias489/contrast-smartscan
+        env:
+          CONTRAST_GITHUB_APP_TS_URL: ${{ inputs.contrast_url }}
+          CONTRAST_GITHUB_APP_ORG_ID: ${{ inputs.contrast_org_id }}
 
   run-sca:
     name: Run Smart SCA
@@ -136,7 +143,7 @@ jobs:
     if: ${{ needs.run-orchestrator.outputs.smart-sca == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Run Smart-SCA
