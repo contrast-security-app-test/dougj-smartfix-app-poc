@@ -12,5 +12,5 @@ echo "Current directory: $(pwd)"
 echo "Files in workspace:"
 ls -la
 
-echo "Initiating Contrast SmartScan orchestration"
+echo "Initiating Contrast SmartScan orchestration..."
 echo "Contrast Contrast SmartScan orchestration completed successfully."
