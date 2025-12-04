@@ -5,7 +5,7 @@ curl --location -o /usr/local/bin/contrast https://pkg.contrastsecurity.com/arti
 chmod +x /usr/local/bin/contrast
 
 # Change to the GitHub workspace where the repository is checked out
-cd /github/workspace || { echo "Error: /github/workspace not found"; exit 1; }
+cd /github/workspace || { echo "Error: /github/workspace not found!!"; exit 1; }
 
 echo "Current directory: $(pwd)"
 echo "Files in workspace:"
