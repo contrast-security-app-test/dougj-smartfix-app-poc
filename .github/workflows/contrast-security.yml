@@ -16,8 +16,8 @@ jobs:
       contrast_org_id: ${{ vars.CONTRAST_GITHUB_APP_ORG_ID }}
       contrast_app_id: ${{ vars.CONTRAST_GITHUB_APP_ID }}
       github_app_installation_id: ${{ vars.CONTRAST_GITHUB_APP_INSTALLATION_ID }}
-      repo_url: ${{ env.GITHUB_SERVER_URL }}
-      repo_name: ${{ env.GITHUB_REPOSITORY }}
+      repo_url: ${{ github.server_url }}
+      repo_name: ${{ github.repository }}
       event_name: ${{ github.event_name }}
       event_path: ${{ github.event_path }}
       event_action: ${{ github.event.action || '' }}
