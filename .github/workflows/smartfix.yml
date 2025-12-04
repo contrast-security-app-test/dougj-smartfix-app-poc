@@ -45,9 +45,12 @@ on:
       CONTRAST_AUTHORIZATION_KEY:
         required: true
         description: The contrast authorization key
-      SMARTFIX_TOKEN:
-        required: false
-        description: The GitHub token to use
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write # required to create issues
+  actions: read # Required for SmartFix to find claude workflow run
 
 jobs:
   show_inputs:
@@ -83,7 +86,7 @@ jobs:
           base_branch: '${{ inputs.base_branch }}'
           build_command: 'cd web && npm install'
           max_qa_attempts: 6
-          github_token: ${{ secrets.SMARTFIX_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           # github_token: ${{ steps.app-token.outputs.token }}
           contrast_host: ${{ inputs.contrast_url }}
           contrast_org_id: ${{ inputs.contrast_org_id }}
@@ -114,7 +117,7 @@ jobs:
           run_task: merge
           debug_mode: 'false'
           #github_token: ${{ steps.app-token.outputs.token }}
-          github_token: ${{ secrets.SMARTFIX_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           # --- Contrast API Credentials ---
           contrast_host: ${{ inputs.contrast_url }}
           contrast_org_id: ${{ inputs.contrast_org_id }}
@@ -140,7 +143,7 @@ jobs:
           run_task: closed
           debug_mode: 'false'
           #github_token: ${{ steps.app-token.outputs.token }}
-          github_token: ${{ secrets.SMARTFIX_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           # --- Contrast API Credentials ---
           contrast_host: ${{ inputs.contrast_url }}
           contrast_org_id: ${{ inputs.contrast_org_id }}
