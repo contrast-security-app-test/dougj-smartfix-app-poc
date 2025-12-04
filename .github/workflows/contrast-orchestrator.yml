@@ -159,4 +159,4 @@ jobs:
     secrets:
       CONTRAST_API_KEY: ${{ secrets.CONTRAST_API_KEY }}
       CONTRAST_AUTHORIZATION_KEY: ${{ secrets.CONTRAST_AUTHORIZATION_KEY }}
-      GITHUB_TOKEN: ${{ needs.get-app-token.outputs.token }}
+      SMARTFIX_TOKEN: ${{ needs.get-app-token.outputs.token }}
