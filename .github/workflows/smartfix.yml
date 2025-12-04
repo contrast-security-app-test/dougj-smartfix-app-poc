@@ -45,6 +45,9 @@ on:
       CONTRAST_AUTHORIZATION_KEY:
         required: true
         description: The contrast authorization key
+      GITHUB_TOKEN:
+        required: false
+        description: The GitHub token to use
 
 jobs:
   show_inputs:
@@ -67,13 +70,6 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ inputs.event_name == 'workflow_dispatch' || inputs.event_name == 'schedule'}}
     steps:
-      - name: Generate GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@v2
-        with:
-          app-id: ${{ secrets.SMARTFIX_APP_ID }}
-          private-key: ${{ secrets.SMARTFIX_APP_PRIVATE_KEY }}
-
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -87,8 +83,8 @@ jobs:
           base_branch: '${{ inputs.base_branch }}'
           build_command: 'cd web && npm install'
           max_qa_attempts: 6
-          #github_token: ${{ secrets.GITHUB_TOKEN }}
-          github_token: ${{ steps.app-token.outputs.token }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # github_token: ${{ steps.app-token.outputs.token }}
           contrast_host: ${{ inputs.contrast_url }}
           contrast_org_id: ${{ inputs.contrast_org_id }}
           contrast_app_id: ${{ inputs.contrast_app_id }}
@@ -117,7 +113,8 @@ jobs:
         with:
           run_task: merge
           debug_mode: 'false'
-          github_token: ${{ steps.app-token.outputs.token }}
+          #github_token: ${{ steps.app-token.outputs.token }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           # --- Contrast API Credentials ---
           contrast_host: ${{ inputs.contrast_url }}
           contrast_org_id: ${{ inputs.contrast_org_id }}
@@ -142,7 +139,8 @@ jobs:
         with:
           run_task: closed
           debug_mode: 'false'
-          github_token: ${{ steps.app-token.outputs.token }}
+          #github_token: ${{ steps.app-token.outputs.token }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           # --- Contrast API Credentials ---
           contrast_host: ${{ inputs.contrast_url }}
           contrast_org_id: ${{ inputs.contrast_org_id }}
