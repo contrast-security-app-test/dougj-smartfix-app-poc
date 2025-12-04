@@ -44,8 +44,8 @@ echo "Contrast App ID: $contrast_app_id"
 # Print hello world
 echo "Hello from contrast orchestrator!!"
 
-# Output JSON object with products array
-echo '{"products":["Smart-Scan","SmartFix","Smart-SCA"]}'
+# Output JSON object with boolean flags for each product
+echo '{"Smart-Scan":true,"SmartFix":true,"Smart-SCA":true}'
 
 # Exit successfully
 exit 0

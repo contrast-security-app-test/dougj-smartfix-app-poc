@@ -66,7 +66,9 @@ jobs:
     name: Run Config Orchestrator
     runs-on: ubuntu-latest
     outputs:
-      scans: ${{ steps.set-matrix.outputs.scans }}
+      smart-scan: ${{ steps.set-outputs.outputs.smart-scan }}
+      smartfix: ${{ steps.set-outputs.outputs.smartfix }}
+      smart-sca: ${{ steps.set-outputs.outputs.smart-sca }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -86,25 +88,27 @@ jobs:
             --api_key "${{ secrets.CONTRAST_API_KEY }}" \
             --authorization_key "${{ secrets.CONTRAST_AUTHORIZATION_KEY }}" 2>&1 | tee output.txt
 
-      - name: Parse scans and create matrix
-        id: set-matrix
+      - name: Parse product flags and set outputs
+        id: set-outputs
         shell: bash
         run: |
-          json_output=$(cat output.txt | grep '{"products":' | head -1)
-          scans=$(echo "$json_output" | jq -r '.products | @json')
-          echo "scans=$scans" >> $GITHUB_OUTPUT
+          json_output=$(cat output.txt | grep '{"Smart-Scan":' | head -1)
+          smart_scan=$(echo "$json_output" | jq -r '."Smart-Scan"')
+          smartfix=$(echo "$json_output" | jq -r '.SmartFix')
+          smart_sca=$(echo "$json_output" | jq -r '."Smart-SCA"')
+
+          echo "smart-scan=$smart_scan" >> $GITHUB_OUTPUT
+          echo "smartfix=$smartfix" >> $GITHUB_OUTPUT
+          echo "smart-sca=$smart_sca" >> $GITHUB_OUTPUT
 
   run-smart-scan:
     name: Run SmartScan
     needs: run-orchestrator
-    strategy:
-      matrix:
-        scan: ${{ fromJson(needs.run-orchestrator.outputs.scans) }}
+    if: ${{ needs.run-orchestrator.outputs.smart-scan == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Run ${{ matrix.scan }}
-        if: ${{ matrix.scan == 'Smart-Scan' }}
-        run: echo "Running ${{ matrix.scan }} placeholder step."
+      - name: Run Smart-Scan
+        run: echo "Running Smart-Scan placeholder step."
 
 #  run-smartfix:
 #    name: Run SmartFix
@@ -132,13 +136,10 @@ jobs:
   run-sca:
     name: Run Smart SCA
     needs: run-orchestrator
-    strategy:
-      matrix:
-        scan: ${{ fromJson(needs.run-orchestrator.outputs.scans) }}
+    if: ${{ needs.run-orchestrator.outputs.smart-sca == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Run ${{ matrix.scan }}
-        if: ${{ matrix.scan == 'Smart-SCA' }}
+      - name: Run Smart-SCA
         uses: docker://dougjeremias489/contrast-sca-cli
         env:
           CONTRAST_GITHUB_APP_APP_TS_URL: ${{ inputs.contrast_url }}
