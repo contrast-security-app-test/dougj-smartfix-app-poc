@@ -16,6 +16,42 @@ on:
         required: true
         type: string
         description: The contrast application id
+      github_app_installation_id:
+        required: true
+        type: string
+        description: The contrast application id
+      repo_url:
+        required: false
+        type: string
+        description: The repository url
+      repo_name:
+        required: false
+        type: string
+        description: The repository name
+      event_name:
+        required: true
+        type: string
+        description: "The name of the github event that triggered the caller."
+      event_path:
+        required: true
+        type: string
+        description: "The path of the github event that triggered the caller."
+      event_action:
+        required: true
+        type: string
+        description: "The action of the github event that triggered the caller."
+      git_head_ref:
+        required: true
+        type: string
+        description: "The git ref that triggered the workflow."
+      base_branch:
+        required: true
+        type: string
+        description: "The default branch to use"
+      pr_was_merged:
+        required: true
+        type: boolean
+        description: "Indicates if the PR was merged"
     secrets:
       CONTRAST_API_KEY:
         required: true
@@ -64,6 +100,38 @@ jobs:
     strategy:
       matrix:
         scan: ${{ fromJson(needs.run-orchestrator.outputs.scans) }}
+    env:
+        contrast_api_key: ${{ secrets.CONTRAST_API_KEY }}
+        contrast_authorization_key: ${{ secrets.CONTRAST_AUTHORIZATION_KEY }}
     steps:
       - name: Run ${{ matrix.scan }}
-        run: echo "Running ${{ matrix.scan }}"
+        if: ${{ matrix.scan == 'Smart-Scan' }}
+        run: echo "Running ${{ matrix.scan }} placeholder step."
+
+      - name: Run ${{ matrix.scan }}
+        if: ${{ matrix.scan == 'Smart-SCA' }}
+        uses: docker://dougjeremias489/contrast-sca-cli
+        env:
+            CONTRAST_GITHUB_APP_APP_TS_URL: ${{ inputs.contrast_url }}
+            CONTRAST_GITHUB_APP_ORG_ID: ${{ inputs.contrast_org_id }}
+            CONTRAST_GITHUB_APP_INSTALLATION_ID: ${{ inputs.github_app_installation_id }}
+            CONTRAST_GITHUB_APP_API_KEY: ${{ secrets.CONTRAST_API_KEY }}
+            CONTRAST_GITHUB_APP_AUTHORIZATION_KEY: ${{ secrets.CONTRAST_AUTHORIZATION_KEY }}
+            GITHUB_SERVER_URL: ${{ inputs.repo_url }}
+            GITHUB_REPOSITORY: ${{ inputs.repo_name }}
+
+      - name: Run ${{ matrix.scan }}
+        if: ${{ matrix.scan == 'SmartFix' }}
+        uses: contrast-security-app-test/dougj-smartfix-app-poc/.github/workflows/smartfix.yml@main
+        with:
+          contrast_url: ${{ vars.CONTRAST_GITHUB_APP_HOST_URL }}
+          contrast_org_id: ${{ vars.CONTRAST_GITHUB_APP_ORG_ID }}
+          contrast_app_id: ${{ vars.CONTRAST_GITHUB_APP_ID }}
+          contrast_api_key: ${{ env.CONTRAST_GITHUB_APP_API_KEY }}
+          contrast_authorization_key: ${{ env.CONTRAST_GITHUB_APP_AUTH_HEADER }}
+          event-name: ${{ inputs.event_name }}
+          event_path: ${{ inputs.event_path }}
+          event_action: ${{ inputs.event_action }}
+          git_head_ref: ${{ inputs.git_head_ref }}
+          base_branch: ${{ inputs.base_branch }}
+          pr_was_merged: ${{ inputs.pr_was_merged }}

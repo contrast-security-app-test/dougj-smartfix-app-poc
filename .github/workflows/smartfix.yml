@@ -1,0 +1,139 @@
+name: SmartFix
+on:
+  workflow_call:
+    inputs:
+      contrast_url:
+        required: true
+        type: string
+        description: The contrast url to connect to
+      contrast_org_id:
+        required: true
+        type: string
+        description: The contrast organization id
+      contrast_app_id:
+        required: true
+        type: string
+        description: The contrast application id
+      event_name:
+        required: true
+        type: string
+        description: "The name of the github event that triggered the caller."
+      event_path:
+        required: true
+        type: string
+        description: "The path of the github event that triggered the caller."
+      event_action:
+        required: true
+        type: string
+        description: "The action of the github event that triggered the caller."
+      git_head_ref:
+        required: true
+        type: string
+        description: "The git head ref that triggered the workflow."
+      base_branch:
+        required: true
+        type: string
+        description: The base branch for PRs
+      pr_was_merged:
+        required: false
+        type: boolean
+        description: "Indicates if the PR was merged"
+      contrast_api_key:
+        required: true
+        type: string
+        description: The contrast API key
+      contrast_authorization_key:
+        required: true
+        type: string
+        description: The contrast authorization key
+
+jobs:
+  generate_fixes:
+    name: Generate Fixes
+    runs-on: ubuntu-latest
+    if: ${{ inputs.event_name == 'workflow_dispatch' || inputs.event_name == 'schedule'}}
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.SMARTFIX_APP_ID }}
+          private-key: ${{ secrets.SMARTFIX_APP_PRIVATE_KEY }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Contrast AI SmartFix - Generate Fixes Action
+        uses: Contrast-Security-OSS/contrast-ai-smartfix-action@v1
+        with:
+          use_contrast_llm: true
+          max_open_prs: 9
+          base_branch: '${{ inputs.base_branch }}'
+          build_command: 'cd web && npm install'
+          max_qa_attempts: 6
+          #github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ steps.app-token.outputs.token }}
+          contrast_host: ${{ inputs.contrast_url }}
+          contrast_org_id: ${{ inputs.contrast_org_id }}
+          contrast_app_id: ${{ inputs.contrast_app_id }}
+          contrast_authorization_key: ${{ inputs.contrast_authorization_key }}
+          contrast_api_key: ${{ inputs.contrast_api_key }}
+
+          # --- Agent Configuration ---
+          # Other Optional Inputs (see action.yml for defaults and more options)
+          # formatting_command: 'mvn spotless:apply' # Or the command appropriate for your project to correct the formatting of SmartFix\'s changes.  This ensures that SmartFix follows your coding standards.
+          # enable_full_telemetry: 'false'
+          debug_mode: 'false'
+
+
+  handle_pr_merge:
+    name: Handle PR Merge
+    runs-on: ubuntu-latest
+    if: ${{ (inputs.pr_was_merged == true && contains(inputs.git_head_ref, 'smartfix/remediation-') || contains(inputs.git_head_ref, 'copilot/fix-') || contains(inputs.git_head_ref, 'claude/issue-')) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Notify Contrast on PR Merge
+        uses: Contrast-Security-OSS/contrast-ai-smartfix-action@v1
+        with:
+          run_task: merge
+          debug_mode: 'false'
+          github_token: ${{ steps.app-token.outputs.token }}
+          # --- Contrast API Credentials ---
+          contrast_host: ${{ inputs.contrast_url }}
+          contrast_org_id: ${{ inputs.contrast_org_id }}
+          contrast_app_id: ${{ inputs.contrast_app_id }}
+          contrast_authorization_key: ${{ inputs.contrast_authorization_key }}
+          contrast_api_key: ${{ inputs.contrast_api_key }}
+        env:
+          GITHUB_EVENT_PATH: ${{ inputs.event_path }}
+
+  handle_pr_closed:
+    name: Handle PR Close
+    runs-on: ubuntu-latest
+    if: ${{ (inputs.event_name == 'pull_request' && inputs.event_action ==  'closed' && inputs.pr_was_merged == false) && (contains(inputs.git_head_ref, 'smartfix/remediation-') || contains(inputs.git_head_ref, 'copilot/fix-') || contains(inputs.git_head_ref, 'claude/issue-')) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Notify Contrast on PR Closed
+        uses: Contrast-Security-OSS/contrast-ai-smartfix-action@v1
+        with:
+          run_task: closed
+          debug_mode: 'false'
+          github_token: ${{ steps.app-token.outputs.token }}
+          # --- Contrast API Credentials ---
+          contrast_host: ${{ inputs.contrast_url }}
+          contrast_org_id: ${{ inputs.contrast_org_id }}
+          contrast_app_id: ${{ inputs.contrast_app_id }}
+          contrast_authorization_key: ${{ inputs.contrast_authorization_key }}
+          contrast_api_key: ${{ inputs.contrast_api_key }}
+        env:
+          GITHUB_EVENT_PATH: ${{ inputs.event_path }}
