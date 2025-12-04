@@ -127,25 +127,21 @@ jobs:
           GITHUB_SERVER_URL: ${{ inputs.repo_url }}
           GITHUB_REPOSITORY: ${{ inputs.repo_name }}
 
-#  run-smartfix:
-#    name: Run SmartFix
-#    needs: run-orchestrator
-#    strategy:
-#      matrix:
-#        scan: ${{ fromJson(needs.run-orchestrator.outputs.scans) }}
-#    runs-on: ubuntu-latest
-#    if: ${{ matrix.scan == 'SmartFix' }}
-#    uses: contrast-security-app-test/dougj-smartfix-app-poc/.github/workflows/smartfix.yml@main
-#    with:
-#      contrast_url: ${{ vars.CONTRAST_GITHUB_APP_HOST_URL }}
-#      contrast_org_id: ${{ vars.CONTRAST_GITHUB_APP_ORG_ID }}
-#      contrast_app_id: ${{ vars.CONTRAST_GITHUB_APP_ID }}
-#      event_name: ${{ inputs.event_name }}
-#      event_path: ${{ inputs.event_path }}
-#      event_action: ${{ inputs.event_action }}
-#      git_head_ref: ${{ inputs.git_head_ref }}
-#      base_branch: ${{ inputs.base_branch }}
-#      pr_was_merged: ${{ inputs.pr_was_merged }}
-#    secrets:
-#      CONTRAST_API_KEY: ${{ secrets.CONTRAST_API_KEY }}
-#      CONTRAST_AUTHORIZATION_KEY: ${{ secrets.CONTRAST_AUTHORIZATION_KEY }}
+  run-smartfix:
+    name: Run SmartFix
+    needs: run-orchestrator
+    if: ${{ needs.run-orchestrator.outputs.smartfix == 'true' }}
+    uses: contrast-security-app-test/dougj-smartfix-app-poc/.github/workflows/smartfix.yml@main
+    with:
+      contrast_url: ${{ inputs.contrast_url }}
+      contrast_org_id: ${{ inputs.contrast_org_id }}
+      contrast_app_id: ${{ inputs.contrast_app_id }}
+      event_name: ${{ inputs.event_name }}
+      event_path: ${{ inputs.event_path }}
+      event_action: ${{ inputs.event_action }}
+      git_head_ref: ${{ inputs.git_head_ref }}
+      base_branch: ${{ inputs.base_branch }}
+      pr_was_merged: ${{ inputs.pr_was_merged }}
+    secrets:
+      CONTRAST_API_KEY: ${{ secrets.CONTRAST_API_KEY }}
+      CONTRAST_AUTHORIZATION_KEY: ${{ secrets.CONTRAST_AUTHORIZATION_KEY }}
