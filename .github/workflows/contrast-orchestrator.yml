@@ -61,6 +61,12 @@ on:
         required: true
         description: The contrast authorization key
 
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: read
+
 jobs:
   run-orchestrator:
     name: Run Config Orchestrator
