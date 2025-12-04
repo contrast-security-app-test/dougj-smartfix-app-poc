@@ -38,13 +38,12 @@ on:
         required: false
         type: boolean
         description: "Indicates if the PR was merged"
-      contrast_api_key:
+    secrets:
+      CONTRAST_API_KEY:
         required: true
-        type: string
         description: The contrast API key
-      contrast_authorization_key:
+      CONTRAST_AUTHORIZATION_KEY:
         required: true
-        type: string
         description: The contrast authorization key
 
 jobs:
@@ -78,8 +77,8 @@ jobs:
           contrast_host: ${{ inputs.contrast_url }}
           contrast_org_id: ${{ inputs.contrast_org_id }}
           contrast_app_id: ${{ inputs.contrast_app_id }}
-          contrast_authorization_key: ${{ inputs.contrast_authorization_key }}
-          contrast_api_key: ${{ inputs.contrast_api_key }}
+          contrast_api_key: ${{ secrets.CONTRAST_API_KEY }}
+          contrast_authorization_key: ${{ secrets.CONTRAST_AUTHORIZATION_KEY }}
 
           # --- Agent Configuration ---
           # Other Optional Inputs (see action.yml for defaults and more options)
@@ -108,8 +107,8 @@ jobs:
           contrast_host: ${{ inputs.contrast_url }}
           contrast_org_id: ${{ inputs.contrast_org_id }}
           contrast_app_id: ${{ inputs.contrast_app_id }}
-          contrast_authorization_key: ${{ inputs.contrast_authorization_key }}
-          contrast_api_key: ${{ inputs.contrast_api_key }}
+          contrast_api_key: ${{ secrets.CONTRAST_API_KEY }}
+          contrast_authorization_key: ${{ secrets.CONTRAST_AUTHORIZATION_KEY }}
         env:
           GITHUB_EVENT_PATH: ${{ inputs.event_path }}
 
@@ -133,7 +132,7 @@ jobs:
           contrast_host: ${{ inputs.contrast_url }}
           contrast_org_id: ${{ inputs.contrast_org_id }}
           contrast_app_id: ${{ inputs.contrast_app_id }}
-          contrast_authorization_key: ${{ inputs.contrast_authorization_key }}
-          contrast_api_key: ${{ inputs.contrast_api_key }}
+          contrast_api_key: ${{ secrets.CONTRAST_API_KEY }}
+          contrast_authorization_key: ${{ secrets.CONTRAST_AUTHORIZATION_KEY }}
         env:
           GITHUB_EVENT_PATH: ${{ inputs.event_path }}
