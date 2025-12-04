@@ -131,7 +131,7 @@ jobs:
     name: Run SmartFix
     needs: run-orchestrator
     if: ${{ needs.run-orchestrator.outputs.smartfix == 'true' }}
-    uses: contrast-security-app-test/dougj-smartfix-app-poc/.github/workflows/smartfix.yml@main
+    uses: ./.github/workflows/smartfix.yml
     with:
       contrast_url: ${{ inputs.contrast_url }}
       contrast_org_id: ${{ inputs.contrast_org_id }}
