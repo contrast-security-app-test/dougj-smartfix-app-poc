@@ -108,7 +108,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run Smart-Scan
-        run: echo "Running Smart-Scan placeholder step!"
+        run: echo "Running Smart-Scan placeholder step!!"
 
   run-sca:
     name: Run Smart SCA
