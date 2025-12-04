@@ -110,10 +110,10 @@ jobs:
     steps:
       - name: Generate GitHub App Token
         id: app-token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v2
         with:
-          app-id: ${{ secrets.CONTRAST_GITHUB_APP_ID }}
-          private-key: ${{ secrets.CONTRAST_GITHUB_APP_PRIVATE_KEY }}
+          app-id: ${{ secrets.SMARTFIX_APP_ID }}
+          private-key: ${{ secrets.SMARTFIX_APP_PRIVATE_KEY }}
 
   run-smart-scan:
     name: Run SmartScan
