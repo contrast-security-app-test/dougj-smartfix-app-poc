@@ -110,6 +110,23 @@ jobs:
       - name: Run Smart-Scan
         run: echo "Running Smart-Scan placeholder step."
 
+  run-sca:
+    name: Run Smart SCA
+    needs: run-orchestrator
+    if: ${{ needs.run-orchestrator.outputs.smart-sca == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Smart-SCA
+        uses: docker://dougjeremias489/contrast-sca-cli
+        env:
+          CONTRAST_GITHUB_APP_APP_TS_URL: ${{ inputs.contrast_url }}
+          CONTRAST_GITHUB_APP_ORG_ID: ${{ inputs.contrast_org_id }}
+          CONTRAST_GITHUB_APP_INSTALLATION_ID: ${{ inputs.github_app_installation_id }}
+          CONTRAST_GITHUB_APP_API_KEY: ${{ secrets.CONTRAST_API_KEY }}
+          CONTRAST_GITHUB_APP_AUTHORIZATION_KEY: ${{ secrets.CONTRAST_AUTHORIZATION_KEY }}
+          GITHUB_SERVER_URL: ${{ inputs.repo_url }}
+          GITHUB_REPOSITORY: ${{ inputs.repo_name }}
+
 #  run-smartfix:
 #    name: Run SmartFix
 #    needs: run-orchestrator
@@ -132,20 +149,3 @@ jobs:
 #    secrets:
 #      CONTRAST_API_KEY: ${{ secrets.CONTRAST_API_KEY }}
 #      CONTRAST_AUTHORIZATION_KEY: ${{ secrets.CONTRAST_AUTHORIZATION_KEY }}
-
-  run-sca:
-    name: Run Smart SCA
-    needs: run-orchestrator
-    if: ${{ needs.run-orchestrator.outputs.smart-sca == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Run Smart-SCA
-        uses: docker://dougjeremias489/contrast-sca-cli
-        env:
-          CONTRAST_GITHUB_APP_APP_TS_URL: ${{ inputs.contrast_url }}
-          CONTRAST_GITHUB_APP_ORG_ID: ${{ inputs.contrast_org_id }}
-          CONTRAST_GITHUB_APP_INSTALLATION_ID: ${{ inputs.github_app_installation_id }}
-          CONTRAST_GITHUB_APP_API_KEY: ${{ secrets.CONTRAST_API_KEY }}
-          CONTRAST_GITHUB_APP_AUTHORIZATION_KEY: ${{ secrets.CONTRAST_AUTHORIZATION_KEY }}
-          GITHUB_SERVER_URL: ${{ inputs.repo_url }}
-          GITHUB_REPOSITORY: ${{ inputs.repo_name }}
