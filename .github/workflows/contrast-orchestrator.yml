@@ -49,8 +49,9 @@ on:
         type: string
         description: "The default branch to use"
       pr_was_merged:
-        required: true
+        required: false
         type: boolean
+        default: false
         description: "Indicates if the PR was merged"
     secrets:
       CONTRAST_API_KEY:
