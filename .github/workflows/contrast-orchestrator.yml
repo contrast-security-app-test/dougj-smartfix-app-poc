@@ -136,6 +136,9 @@ jobs:
     if: ${{ needs.run-orchestrator.outputs.smart-sca == 'true' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Run Smart-SCA
         uses: docker://dougjeremias489/contrast-sca-cli
         env:

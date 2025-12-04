@@ -4,6 +4,13 @@ echo 'Downloading Contrast SCA CLI Tool'
 curl --location -o /usr/local/bin/contrast https://pkg.contrastsecurity.com/artifactory/cli/v2/latest/linux/contrast
 chmod +x /usr/local/bin/contrast
 
+# Change to the GitHub workspace where the repository is checked out
+cd /github/workspace || { echo "Error: /github/workspace not found"; exit 1; }
+
+echo "Current directory: $(pwd)"
+echo "Files in workspace:"
+ls -la
+
 FULL_REPO_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"
 REPO_NAME=$(echo "$GITHUB_REPOSITORY" | awk -F/ '{print $2}')
 
