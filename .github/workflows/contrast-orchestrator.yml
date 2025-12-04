@@ -99,10 +99,10 @@ jobs:
     strategy:
       matrix:
         scan: ${{ fromJson(needs.run-orchestrator.outputs.scans) }}
-    if: ${{ matrix.scan == 'Smart-Scan' }}
     runs-on: ubuntu-latest
     steps:
       - name: Run ${{ matrix.scan }}
+        if: ${{ matrix.scan == 'Smart-Scan' }}
         run: echo "Running ${{ matrix.scan }} placeholder step."
 
   run-smartfix:
@@ -111,13 +111,13 @@ jobs:
     strategy:
       matrix:
         scan: ${{ fromJson(needs.run-orchestrator.outputs.scans) }}
-    if: ${{ matrix.scan == 'SmartFix' }}
     runs-on: ubuntu-latest
     env:
       contrast_api_key: ${{ secrets.CONTRAST_API_KEY }}
       contrast_authorization_key: ${{ secrets.CONTRAST_AUTHORIZATION_KEY }}
     steps:
       - name: Run ${{ matrix.scan }}
+        if: ${{ matrix.scan == 'SmartFix' }}
         uses: contrast-security-app-test/dougj-smartfix-app-poc/.github/workflows/smartfix.yml@main
         with:
           contrast_url: ${{ vars.CONTRAST_GITHUB_APP_HOST_URL }}
@@ -138,10 +138,10 @@ jobs:
     strategy:
       matrix:
         scan: ${{ fromJson(needs.run-orchestrator.outputs.scans) }}
-    if: ${{ matrix.scan == 'Smart-SCA' }}
     runs-on: ubuntu-latest
     steps:
       - name: Run ${{ matrix.scan }}
+        if: ${{ matrix.scan == 'Smart-SCA' }}
         uses: docker://dougjeremias489/contrast-sca-cli
         env:
           CONTRAST_GITHUB_APP_APP_TS_URL: ${{ inputs.contrast_url }}
