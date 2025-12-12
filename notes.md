@@ -1,0 +1,1 @@
+-- how do we support the build command for smartfix

@@ -132,6 +132,9 @@ jobs:
           echo "enable_full_telemetry: ${{ inputs.enable_full_telemetry }}"
   run_smartfix:
     name: SmartFix
+    if: |
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') ||
+      (github.event_name == 'pull_request' && github.event.action ==  'closed')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
