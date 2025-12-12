@@ -53,6 +53,51 @@ on:
         type: boolean
         default: false
         description: "Indicates if the PR was merged"
+      build_command:
+        description: 'Build command to run before SmartFix'
+        required: true
+        type: string
+      formatting_command:
+        description: 'Format command to run before SmartFix'
+        required: false
+        type: string
+      agent_model:
+        description: 'The provider LLM model to use'
+        required: false
+        type: string
+      use_contrast_llm:
+        required: false
+        type: string
+        default: 'false'
+        description: "Indicates if the PR was merged"
+      max_open_prs:
+        description: 'Maximum number of open PRs'
+        required: false
+        type: string
+        default: '5'
+      aws_region:
+        description: 'The AWS region for Bedrock LLM'
+        required: false
+        type: string
+        default: 'us-east-1'
+      azure_api_base:
+        description: 'The Azure API base URL'
+        required: false
+        type: string
+      azure_api_version:
+        description: 'The Azure API version'
+        required: false
+        type: string
+      enable_full_telemetry:
+        description: 'Enable full telemetry for debugging'
+        required: false
+        type: string
+        default: 'true'
+      debug_mode:
+        description: 'Enable debug mode for verbose logging'
+        required: false
+        type: string
+        default: 'false'
     secrets:
       CONTRAST_API_KEY:
         required: true
@@ -60,6 +105,18 @@ on:
       CONTRAST_AUTHORIZATION_KEY:
         required: true
         description: The contrast authorization key
+      GEMINI_API_KEY:
+        required: false
+        description: The Google Gemini API key
+      ANTHROPIC_API_KEY:
+        required: false
+        description: The Anthropic API key
+      AZURE_API_KEY:
+        required: false
+        description: The Azure API key
+      AWS_BEARER_TOKEN_BEDROCK:
+        required: false
+        description: The AWS Bedrock API key
 
 permissions:
   contents: write
@@ -160,9 +217,22 @@ jobs:
   run-smartfix:
     name: Run SmartFix
     needs: run-orchestrator
-    if: ${{ needs.run-orchestrator.outputs.smartfix == 'true' }}
+    if: |
+      (needs.run-orchestrator.outputs.smartfix == 'true') &&
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') ||
+      (github.event_name == 'pull_request' && github.event.action ==  'closed')
     uses: ./.github/workflows/smartfix.yml
     with:
+      build_command: ${{ inputs.build_command }}
+      formatting_command: ${{ inputs.formatting_command }}
+      use_contrast_llm: ${{ inputs.use_contrast_llm }}
+      max_open_prs: ${{ inputs.max_open_prs }}
+      aws_region: ${{ inputs.aws_region }}
+      agent_model: ${{ inputs.agent_model }}
+      azure_api_base: ${{ inputs.azure_api_base }}
+      azure_api_version: ${{ inputs.azure_api_version }}
+      enable_full_telemetry: ${{ inputs.enable_full_telemetry }}
+      debug_mode: ${{ inputs.debug_mode }}
       contrast_url: ${{ inputs.contrast_url }}
       contrast_org_id: ${{ inputs.contrast_org_id }}
       contrast_app_id: ${{ inputs.contrast_app_id }}
@@ -175,3 +245,7 @@ jobs:
     secrets:
       CONTRAST_API_KEY: ${{ secrets.CONTRAST_API_KEY }}
       CONTRAST_AUTHORIZATION_KEY: ${{ secrets.CONTRAST_AUTHORIZATION_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      AZURE_API_KEY: ${{ secrets.AZURE_API_KEY }}
+      AWS_BEARER_TOKEN_BEDROCK: ${{ secrets.AWS_BEARER_TOKEN_BEDROCK }}

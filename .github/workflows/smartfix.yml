@@ -34,10 +34,56 @@ on:
         required: true
         type: string
         description: The base branch for PRs
+      build_command:
+        description: 'Build command to run before SmartFix'
+        required: true
+        type: string
+      formatting_command:
+        description: 'Format command to run before SmartFix'
+        required: false
+        type: string
+      agent_model:
+        description: 'The provider LLM model to use'
+        required: false
+        type: string
+        default: 'bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0'
       pr_was_merged:
         required: false
         type: boolean
         description: "Indicates if the PR was merged"
+      use_contrast_llm:
+        required: false
+        type: string
+        default: 'false'
+        description: "Indicates if the PR was merged"
+      max_open_prs:
+        description: 'Maximum number of open PRs'
+        required: false
+        type: string
+        default: '5'
+      aws_region:
+        description: 'The AWS region for Bedrock LLM'
+        required: false
+        type: string
+        default: 'us-east-1'
+      azure_api_base:
+        description: 'The Azure API base URL'
+        required: false
+        type: string
+      azure_api_version:
+        description: 'The Azure API version'
+        required: false
+        type: string
+      enable_full_telemetry:
+        description: 'Enable full telemetry for debugging'
+        required: false
+        type: string
+        default: 'true'
+      debug_mode:
+        description: 'Enable debug mode for verbose logging'
+        required: false
+        type: string
+        default: 'false'
     secrets:
       CONTRAST_API_KEY:
         required: true
@@ -45,12 +91,24 @@ on:
       CONTRAST_AUTHORIZATION_KEY:
         required: true
         description: The contrast authorization key
+      GEMINI_API_KEY:
+        required: false
+        description: The Google Gemini API key
+      ANTHROPIC_API_KEY:
+        required: false
+        description: The Anthropic API key
+      AZURE_API_KEY:
+        required: false
+        description: The Azure API key
+      AWS_BEARER_TOKEN_BEDROCK:
+        required: false
+        description: The AWS Bedrock API key
 
 permissions:
   contents: write
   pull-requests: write
-  issues: write # required to create issues
-  actions: read # Required for SmartFix to find claude workflow run
+  #issues: write # required to create issues
+  #actions: read # Required for SmartFix to find claude workflow run
 
 jobs:
   show_inputs:
@@ -68,87 +126,64 @@ jobs:
           echo "Git Head Ref: ${{ inputs.git_head_ref }}"
           echo "Base Branch: ${{ inputs.base_branch }}"
           echo "PR Was Merged: ${{ inputs.pr_was_merged }}"
-  generate_fixes:
-    name: SmartFix Generate Fixes
+          echo "build_command: ${{ inputs.build_command }}"
+          echo "use_contrast_llm: ${{ inputs.use_contrast_llm }}"
+          echo "max_open_prs: ${{ inputs.max_open_prs }}"
+          echo "enable_full_telemetry: ${{ inputs.enable_full_telemetry }}"
+  run_smartfix:
+    name: SmartFix
     runs-on: ubuntu-latest
-    if: ${{ inputs.event_name == 'workflow_dispatch' || inputs.event_name == 'schedule'}}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Run Contrast AI SmartFix - Generate Fixes Action
-        uses: Contrast-Security-OSS/contrast-ai-smartfix-action@v1
+      - name: Determine SmartFix Job Type
+        id: determine_job_name
+        shell: bash
+        run: |
+          if [[ "${{ github.event.pull_request.merged }}" == "true" ]]; then
+            echo "job_name=Notify Contrast on PR Merge" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.pull_request.merged }}" == "false" ]]; then
+            echo "job_name=Handle PR Close" >> $GITHUB_OUTPUT
+          else
+            echo "job_name=Run Contrast AI SmartFix - Generate Fixes" >> $GITHUB_OUTPUT
+          fi
+      - name: ${{ steps.determine_job_name.outputs.job_name }}
+        uses: Contrast-Security-OSS/contrast-ai-smartfix-action@AIML-313-simplify-smartfix-yml-job
         with:
-          use_contrast_llm: true
-          max_open_prs: 9
+          use_contrast_llm: ${{ inputs.use_contrast_llm }}
+          max_open_prs: ${{ inputs.max_open_prs }}
           base_branch: '${{ inputs.base_branch }}'
-          build_command: 'cd web && npm install'
-          max_qa_attempts: 6
+          build_command: '${{ inputs.build_command }}'
+          formatting_command: '${{ inputs.formatting_command }}'
+          max_qa_attempts: 5
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          # github_token: ${{ steps.app-token.outputs.token }}
           contrast_host: ${{ inputs.contrast_url }}
           contrast_org_id: ${{ inputs.contrast_org_id }}
           contrast_app_id: ${{ inputs.contrast_app_id }}
           contrast_api_key: ${{ secrets.CONTRAST_API_KEY }}
           contrast_authorization_key: ${{ secrets.CONTRAST_AUTHORIZATION_KEY }}
 
-          # --- Agent Configuration ---
+          # LLM Provider Configuration (Required if not using Contrast LLM) ---
+          agent_model: ${{ inputs.agent_model }}
+
+          # --- Google Gemini API Credentials ---
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+
+          # --- Anthropic API Credentials ---
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+
+          # --- AWS Bedrock API Key (Alternative to IAM credentials, less secure) ---
+          aws_bearer_token_bedrock: ${{ secrets.AWS_BEARER_TOKEN_BEDROCK }}
+          aws_region: ${{ inputs.aws_region }}
+
+          # --- Azure Open API Credentials ---
+          azure_api_key: ${{ secrets.AZURE_API_KEY }}
+          azure_api_base: ${{ inputs.azure_api_base }}
+          azure_api_version: ${{ inputs.azure_api_version }}
+
           # Other Optional Inputs (see action.yml for defaults and more options)
-          # formatting_command: 'mvn spotless:apply' # Or the command appropriate for your project to correct the formatting of SmartFix\'s changes.  This ensures that SmartFix follows your coding standards.
-          # enable_full_telemetry: 'false'
-          debug_mode: 'false'
-
-
-  handle_pr_merge:
-    name: SmartFix Handle PR Merge
-    runs-on: ubuntu-latest
-    if: ${{ (inputs.pr_was_merged == true && contains(inputs.git_head_ref, 'smartfix/remediation-') || contains(inputs.git_head_ref, 'copilot/fix-') || contains(inputs.git_head_ref, 'claude/issue-')) }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Notify Contrast on PR Merge
-        uses: Contrast-Security-OSS/contrast-ai-smartfix-action@v1
-        with:
-          run_task: merge
-          debug_mode: 'false'
-          #github_token: ${{ steps.app-token.outputs.token }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          # --- Contrast API Credentials ---
-          contrast_host: ${{ inputs.contrast_url }}
-          contrast_org_id: ${{ inputs.contrast_org_id }}
-          contrast_app_id: ${{ inputs.contrast_app_id }}
-          contrast_api_key: ${{ secrets.CONTRAST_API_KEY }}
-          contrast_authorization_key: ${{ secrets.CONTRAST_AUTHORIZATION_KEY }}
-        env:
-          GITHUB_EVENT_PATH: ${{ inputs.event_path }}
-
-  handle_pr_closed:
-    name: SmartFix Handle PR Close
-    runs-on: ubuntu-latest
-    if: ${{ (inputs.event_name == 'pull_request' && inputs.event_action ==  'closed' && inputs.pr_was_merged == false) && (contains(inputs.git_head_ref, 'smartfix/remediation-') || contains(inputs.git_head_ref, 'copilot/fix-') || contains(inputs.git_head_ref, 'claude/issue-')) }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Notify Contrast on PR Closed
-        uses: Contrast-Security-OSS/contrast-ai-smartfix-action@v1
-        with:
-          run_task: closed
-          debug_mode: 'false'
-          #github_token: ${{ steps.app-token.outputs.token }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          # --- Contrast API Credentials ---
-          contrast_host: ${{ inputs.contrast_url }}
-          contrast_org_id: ${{ inputs.contrast_org_id }}
-          contrast_app_id: ${{ inputs.contrast_app_id }}
-          contrast_api_key: ${{ secrets.CONTRAST_API_KEY }}
-          contrast_authorization_key: ${{ secrets.CONTRAST_AUTHORIZATION_KEY }}
-        env:
-          GITHUB_EVENT_PATH: ${{ inputs.event_path }}
+          enable_full_telemetry: ${{ inputs.enable_full_telemetry }}
+          debug_mode: ${{ inputs.debug_mode }}
