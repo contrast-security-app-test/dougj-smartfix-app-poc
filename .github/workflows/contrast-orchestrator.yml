@@ -28,31 +28,31 @@ on:
         required: false
         type: string
         description: The repository name
-      event_name:
-        required: true
-        type: string
-        description: "The name of the github event that triggered the caller."
-      event_path:
-        required: true
-        type: string
-        description: "The path of the github event that triggered the caller."
-      event_action:
-        required: true
-        type: string
-        description: "The action of the github event that triggered the caller."
-      git_head_ref:
-        required: true
-        type: string
-        description: "The git ref that triggered the workflow."
+      #event_name:
+        #required: true
+        #type: string
+        #description: "The name of the github event that triggered the caller."
+      #event_path:
+        #required: true
+        #type: string
+        #description: "The path of the github event that triggered the caller."
+      #event_action:
+        #required: true
+        #type: string
+        #description: "The action of the github event that triggered the caller."
+      #git_head_ref:
+        #required: true
+        #type: string
+        #description: "The git ref that triggered the workflow."
+      #pr_was_merged:
+        #required: false
+        #type: boolean
+        #default: false
+        #description: "Indicates if the PR was merged"
       base_branch:
         required: true
         type: string
         description: "The default branch to use"
-      pr_was_merged:
-        required: false
-        type: boolean
-        default: false
-        description: "Indicates if the PR was merged"
       build_command:
         description: 'Build command to run before SmartFix'
         required: true
@@ -226,6 +226,7 @@ jobs:
       - name: Run SmartFix
         uses: Contrast-Security-OSS/contrast-ai-smartfix-action@AIML-313-simplify-smartfix-yml-job
         with:
+          base_branch: ${{ inputs.base_branch }}
           build_command: ${{ inputs.build_command }}
           formatting_command: ${{ inputs.formatting_command }}
           use_contrast_llm: ${{ inputs.use_contrast_llm }}
@@ -250,5 +251,4 @@ jobs:
           #event_path: ${{ inputs.event_path }}
           #event_action: ${{ inputs.event_action }}
           #git_head_ref: ${{ inputs.git_head_ref }}
-          #base_branch: ${{ inputs.base_branch }}
           #pr_was_merged: ${{ inputs.pr_was_merged }}
