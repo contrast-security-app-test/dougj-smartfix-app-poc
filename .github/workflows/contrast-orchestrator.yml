@@ -1,7 +1,7 @@
 name: Contrast Shared Orchestrator POC
 
 on:
-  workflow_dispatch:
+  #workflow_dispatch:
   workflow_call:
     inputs:
       contrast_host:
@@ -28,27 +28,6 @@ on:
         required: false
         type: string
         description: The repository name
-      #event_name:
-        #required: true
-        #type: string
-        #description: "The name of the github event that triggered the caller."
-      #event_path:
-        #required: true
-        #type: string
-        #description: "The path of the github event that triggered the caller."
-      #event_action:
-        #required: true
-        #type: string
-        #description: "The action of the github event that triggered the caller."
-      #git_head_ref:
-        #required: true
-        #type: string
-        #description: "The git ref that triggered the workflow."
-      #pr_was_merged:
-        #required: false
-        #type: boolean
-        #default: false
-        #description: "Indicates if the PR was merged"
       base_branch:
         required: true
         type: string
@@ -220,10 +199,24 @@ jobs:
   run-smartfix:
     name: Run SmartFix
     needs: run-orchestrator
-    if: ${{ needs.run-orchestrator.outputs.smartfix == 'true' }}
+    if: |
+      (needs.run-orchestrator.outputs.smartfix == 'true') &&
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') ||
+      (github.event_name == 'pull_request' && github.event.action ==  'closed')
     runs-on: ubuntu-latest
     steps:
-      - name: Run SmartFix
+      - name: Determine SmartFix Job Type
+        id: determine_job_name
+        shell: bash
+        run: |
+          if [[ "${{ github.event.pull_request.merged }}" == "true" ]]; then
+            echo "job_name=Notify Contrast on PR Merge" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.pull_request.merged }}" == "false" ]]; then
+            echo "job_name=Handle PR Close" >> $GITHUB_OUTPUT
+          else
+            echo "job_name=Run Contrast AI SmartFix - Generate Fixes" >> $GITHUB_OUTPUT
+          fi
+      - name: ${{ steps.determine_job_name.outputs.job_name }}
         uses: Contrast-Security-OSS/contrast-ai-smartfix-action@AIML-313-simplify-smartfix-yml-job
         with:
           base_branch: ${{ inputs.base_branch }}
@@ -247,8 +240,3 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           azure_api_key: ${{ secrets.AZURE_API_KEY }}
           aws_bearer_token_bedrock: ${{ secrets.AWS_BEARER_TOKEN_BEDROCK }}
-          #event_name: ${{ inputs.event_name }}
-          #event_path: ${{ inputs.event_path }}
-          #event_action: ${{ inputs.event_action }}
-          #git_head_ref: ${{ inputs.git_head_ref }}
-          #pr_was_merged: ${{ inputs.pr_was_merged }}
