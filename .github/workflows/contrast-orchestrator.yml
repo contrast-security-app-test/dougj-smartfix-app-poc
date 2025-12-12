@@ -221,31 +221,34 @@ jobs:
     name: Run SmartFix
     needs: run-orchestrator
     if: ${{ needs.run-orchestrator.outputs.smartfix == 'true' }}
-    uses: Contrast-Security-OSS/contrast-ai-smartfix-action@AIML-313-simplify-smartfix-yml-job
-    with:
-      build_command: ${{ inputs.build_command }}
-      formatting_command: ${{ inputs.formatting_command }}
-      use_contrast_llm: ${{ inputs.use_contrast_llm }}
-      max_open_prs: ${{ inputs.max_open_prs }}
-      aws_region: ${{ inputs.aws_region }}
-      agent_model: ${{ inputs.agent_model }}
-      azure_api_base: ${{ inputs.azure_api_base }}
-      azure_api_version: ${{ inputs.azure_api_version }}
-      enable_full_telemetry: ${{ inputs.enable_full_telemetry }}
-      debug_mode: ${{ inputs.debug_mode }}
-      contrast_host: ${{ inputs.contrast_host }}
-      contrast_org_id: ${{ inputs.contrast_org_id }}
-      contrast_app_id: ${{ inputs.contrast_app_id }}
-      contrast_authorization_key: ${{ secrets.CONTRAST_AUTHORIZATION_KEY }}
-      contrast_api_key: ${{ secrets.CONTRAST_API_KEY }}
-      github_token: ${{ secrets.GH_TOKEN }}
-      gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
-      anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-      azure_api_key: ${{ secrets.AZURE_API_KEY }}
-      aws_bearer_token_bedrock: ${{ secrets.AWS_BEARER_TOKEN_BEDROCK }}
-      #event_name: ${{ inputs.event_name }}
-      #event_path: ${{ inputs.event_path }}
-      #event_action: ${{ inputs.event_action }}
-      #git_head_ref: ${{ inputs.git_head_ref }}
-      #base_branch: ${{ inputs.base_branch }}
-      #pr_was_merged: ${{ inputs.pr_was_merged }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run SmartFix
+        uses: Contrast-Security-OSS/contrast-ai-smartfix-action@AIML-313-simplify-smartfix-yml-job
+        with:
+          build_command: ${{ inputs.build_command }}
+          formatting_command: ${{ inputs.formatting_command }}
+          use_contrast_llm: ${{ inputs.use_contrast_llm }}
+          max_open_prs: ${{ inputs.max_open_prs }}
+          aws_region: ${{ inputs.aws_region }}
+          agent_model: ${{ inputs.agent_model }}
+          azure_api_base: ${{ inputs.azure_api_base }}
+          azure_api_version: ${{ inputs.azure_api_version }}
+          enable_full_telemetry: ${{ inputs.enable_full_telemetry }}
+          debug_mode: ${{ inputs.debug_mode }}
+          contrast_host: ${{ inputs.contrast_host }}
+          contrast_org_id: ${{ inputs.contrast_org_id }}
+          contrast_app_id: ${{ inputs.contrast_app_id }}
+          contrast_authorization_key: ${{ secrets.CONTRAST_AUTHORIZATION_KEY }}
+          contrast_api_key: ${{ secrets.CONTRAST_API_KEY }}
+          github_token: ${{ secrets.GH_TOKEN }}
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          azure_api_key: ${{ secrets.AZURE_API_KEY }}
+          aws_bearer_token_bedrock: ${{ secrets.AWS_BEARER_TOKEN_BEDROCK }}
+          #event_name: ${{ inputs.event_name }}
+          #event_path: ${{ inputs.event_path }}
+          #event_action: ${{ inputs.event_action }}
+          #git_head_ref: ${{ inputs.git_head_ref }}
+          #base_branch: ${{ inputs.base_branch }}
+          #pr_was_merged: ${{ inputs.pr_was_merged }}
