@@ -217,10 +217,7 @@ jobs:
   run-smartfix:
     name: Run SmartFix
     needs: run-orchestrator
-    if: |
-      (needs.run-orchestrator.outputs.smartfix == 'true') &&
-      (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') ||
-      (github.event_name == 'pull_request' && github.event.action ==  'closed')
+    if: ${{ needs.run-orchestrator.outputs.smartfix == 'true' }}
     uses: ./.github/workflows/smartfix.yml
     with:
       build_command: ${{ inputs.build_command }}
