@@ -54,11 +54,6 @@ on:
         required: false
         type: string
         default: '5'
-      aws_region:
-        description: 'The AWS region for Bedrock LLM'
-        required: false
-        type: string
-        #default: 'us-east-1'
       azure_api_base:
         description: 'The Azure API base URL'
         required: false
@@ -82,6 +77,16 @@ on:
         required: false
         type: string
         default: 'ubuntu-latest'
+      aws_region:
+        description: 'The AWS region for Bedrock LLM'
+        required: false
+        type: string
+        #default: 'us-east-1'
+      use_aws:
+        description: 'Whether to use AWS credentials configuration'
+        required: false
+        type: string
+        default: 'false'
     secrets:
       CONTRAST_API_KEY:
         required: true
@@ -177,20 +182,6 @@ jobs:
 #          app-id: ${{ secrets.SMARTFIX_APP_ID }}
 #          private-key: ${{ secrets.SMARTFIX_APP_PRIVATE_KEY }}
 
-  aws-login:
-    name: Configure AWS Credentials
-    runs-on: ubuntu-latest
-    steps:
-      - name: Configure AWS Credentials
-        id: aws-credentials
-        uses: aws-actions/configure-aws-credentials@v5
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: ${{ vars.AWS_REGION }}
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-
   run-smart-scan:
     name: Run SmartScan
     needs: run-orchestrator
@@ -199,6 +190,16 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        if: ${{ inputs.aws_region != '' && inputs.use_aws == 'true' }}
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ inputs.aws_region }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
 
       - name: Run Step Before Smart-SCAN
         run: echo "Hello from some in-between step if needed...."
@@ -250,18 +251,18 @@ jobs:
             echo "job_name=Run Contrast AI SmartFix - Generate Fixes" >> $GITHUB_OUTPUT
           fi
 
-      #- name: Configure AWS Credentials
-        #if: ${{ inputs.aws_region != '' }}
-        #uses: aws-actions/configure-aws-credentials@v5
-        #with:
-          #aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          #aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          #aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          #aws-region: ${{ inputs.aws_region }}
-          #role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+      - name: Configure AWS Credentials
+        if: ${{ inputs.aws_region != '' && inputs.use_aws == 'true' }}
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ inputs.aws_region }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
 
       - name: Verify AWS Credentials (Debug)
-        if: ${{ inputs.aws_region != '' }}
+        if: ${{ inputs.aws_region != '' && inputs.use_aws == 'true' }}
         shell: bash
         run: |
           echo "AWS_REGION is set to: $AWS_REGION"
