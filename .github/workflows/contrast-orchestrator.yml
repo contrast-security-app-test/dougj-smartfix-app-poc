@@ -261,7 +261,7 @@ jobs:
           aws-region: ${{ inputs.aws_region }}
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
 
-      - name: Verify AWS Credentials (Debug)
+      - name: Verify AWS Credentials (Doug Debugging)
         if: ${{ inputs.aws_region != '' && inputs.use_aws == 'true' }}
         shell: bash
         run: |
