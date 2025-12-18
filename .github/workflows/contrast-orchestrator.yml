@@ -110,6 +110,9 @@ on:
       AWS_SESSION_TOKEN:
         required: false
         description: The AWS session token
+      AWS_ROLE_TO_ASSUME:
+        required: false
+        description: The AWS role to assume
       GH_TOKEN:
         required: true
         description: The GitHub token
@@ -174,6 +177,20 @@ jobs:
 #          app-id: ${{ secrets.SMARTFIX_APP_ID }}
 #          private-key: ${{ secrets.SMARTFIX_APP_PRIVATE_KEY }}
 
+  aws-login:
+    name: Configure AWS Credentials
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        id: aws-credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+
   run-smart-scan:
     name: Run SmartScan
     needs: run-orchestrator
@@ -235,13 +252,13 @@ jobs:
 
       #- name: Configure AWS Credentials
         #if: ${{ inputs.aws_region != '' }}
-        #continue-on-error: true
         #uses: aws-actions/configure-aws-credentials@v5
         #with:
           #aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           #aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           #aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           #aws-region: ${{ inputs.aws_region }}
+          #role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
 
       - name: Verify AWS Credentials (Debug)
         if: ${{ inputs.aws_region != '' }}
@@ -262,7 +279,6 @@ jobs:
           formatting_command: ${{ inputs.formatting_command }}
           use_contrast_llm: ${{ inputs.use_contrast_llm }}
           max_open_prs: ${{ inputs.max_open_prs }}
-          aws_region: ${{ inputs.aws_region }}
           agent_model: ${{ inputs.agent_model }}
           azure_api_base: ${{ inputs.azure_api_base }}
           azure_api_version: ${{ inputs.azure_api_version }}
@@ -277,4 +293,5 @@ jobs:
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           azure_api_key: ${{ secrets.AZURE_API_KEY }}
+          aws_region: ${{ inputs.aws_region }}
           aws_bearer_token_bedrock: ${{ secrets.AWS_BEARER_TOKEN_BEDROCK }}
