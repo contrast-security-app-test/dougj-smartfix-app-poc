@@ -58,7 +58,7 @@ on:
         description: 'The AWS region for Bedrock LLM'
         required: false
         type: string
-        default: 'us-east-1'
+        #default: 'us-east-1'
       azure_api_base:
         description: 'The Azure API base URL'
         required: false
@@ -183,17 +183,9 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
-        if: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}
-        uses: aws-actions/configure-aws-credentials@v5
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: ${{ inputs.aws_region }}
-
       - name: Run Step Before Smart-SCAN
         run: echo "Hello from some in-between step if needed...."
+
       - name: Run Smart-SCAN
         uses: docker://dougjeremias489/contrast-smartscan
         env:
@@ -242,7 +234,8 @@ jobs:
           fi
 
       - name: Configure AWS Credentials
-        if: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}
+        if: ${{ inputs.aws_region != '' }}
+        continue-on-error: true
         uses: aws-actions/configure-aws-credentials@v5
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -251,7 +244,7 @@ jobs:
           aws-region: ${{ inputs.aws_region }}
 
       - name: Verify AWS Credentials (Debug)
-        if: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}
+        if: ${{ inputs.aws_region != '' }}
         shell: bash
         run: |
           echo "AWS_REGION is set to: $AWS_REGION"
