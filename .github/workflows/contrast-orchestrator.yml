@@ -233,15 +233,15 @@ jobs:
             echo "job_name=Run Contrast AI SmartFix - Generate Fixes" >> $GITHUB_OUTPUT
           fi
 
-      - name: Configure AWS Credentials
-        if: ${{ inputs.aws_region != '' }}
-        continue-on-error: true
-        uses: aws-actions/configure-aws-credentials@v5
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: ${{ inputs.aws_region }}
+      #- name: Configure AWS Credentials
+        #if: ${{ inputs.aws_region != '' }}
+        #continue-on-error: true
+        #uses: aws-actions/configure-aws-credentials@v5
+        #with:
+          #aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          #aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          #aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          #aws-region: ${{ inputs.aws_region }}
 
       - name: Verify AWS Credentials (Debug)
         if: ${{ inputs.aws_region != '' }}
