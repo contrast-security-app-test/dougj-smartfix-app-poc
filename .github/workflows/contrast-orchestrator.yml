@@ -77,6 +77,11 @@ on:
         required: false
         type: string
         default: 'false'
+      github_runner:
+        description: 'The GitHub runner to use (example: ubuntu-latest)'
+        required: false
+        type: string
+        default: 'ubuntu-latest'
     secrets:
       CONTRAST_API_KEY:
         required: true
@@ -96,6 +101,15 @@ on:
       AWS_BEARER_TOKEN_BEDROCK:
         required: false
         description: The AWS Bedrock API key
+      AWS_ACCESS_KEY_ID:
+        required: false
+        description: The AWS access key
+      AWS_SECRET_ACCESS_KEY:
+        required: false
+        description: The AWS access key
+      AWS_SESSION_TOKEN:
+        required: false
+        description: The AWS session token
       GH_TOKEN:
         required: true
         description: The GitHub token
@@ -109,7 +123,7 @@ permissions:
 jobs:
   run-orchestrator:
     name: Run Config Orchestrator
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.github_runner }}
     outputs:
       smart-scan: ${{ steps.set-outputs.outputs.smart-scan }}
       smartfix: ${{ steps.set-outputs.outputs.smartfix }}
@@ -164,10 +178,20 @@ jobs:
     name: Run SmartScan
     needs: run-orchestrator
     if: ${{ needs.run-orchestrator.outputs.smart-scan == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.github_runner }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        if: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ inputs.aws_region }}
+
       - name: Run Step Before Smart-SCAN
         run: echo "Hello from some in-between step if needed...."
       - name: Run Smart-SCAN
@@ -180,7 +204,7 @@ jobs:
     name: Run Smart SCA
     needs: run-orchestrator
     if: ${{ needs.run-orchestrator.outputs.smart-sca == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.github_runner }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -203,7 +227,7 @@ jobs:
       (needs.run-orchestrator.outputs.smartfix == 'true') &&
       (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') ||
       (github.event_name == 'pull_request' && github.event.action ==  'closed')
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.github_runner }}
     steps:
       - name: Determine SmartFix Job Type
         id: determine_job_name
@@ -216,6 +240,27 @@ jobs:
           else
             echo "job_name=Run Contrast AI SmartFix - Generate Fixes" >> $GITHUB_OUTPUT
           fi
+
+      - name: Configure AWS Credentials
+        if: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ inputs.aws_region }}
+
+      - name: Verify AWS Credentials (Debug)
+        if: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}
+        shell: bash
+        run: |
+          echo "AWS_REGION is set to: $AWS_REGION"
+          echo "AWS_DEFAULT_REGION is set to: $AWS_DEFAULT_REGION"
+          echo "AWS_ACCESS_KEY_ID is set: $([ -n "$AWS_ACCESS_KEY_ID" ] && echo 'YES' || echo 'NO')"
+          echo "AWS_SECRET_ACCESS_KEY is set: $([ -n "$AWS_SECRET_ACCESS_KEY" ] && echo 'YES' || echo 'NO')"
+          echo "AWS_SESSION_TOKEN is set: $([ -n "$AWS_SESSION_TOKEN" ] && echo 'YES' || echo 'NO')"
+          aws sts get-caller-identity || echo "AWS credentials test failed"
+
       - name: ${{ steps.determine_job_name.outputs.job_name }}
         uses: Contrast-Security-OSS/contrast-ai-smartfix-action@AIML-313-simplify-smartfix-yml-job
         with:
