@@ -1,0 +1,65 @@
+name: SmartAI Repo Scan
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  scan_repo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v6
+
+      - name: Get repository languages
+        id: get_repo_langs
+        uses: octokit/request-action@v2.4.0
+        with:
+          route: GET /repos/{owner}/{repo}/languages
+          owner: ${{ GITHUB.REPOSITORY_OWNER }}
+          repo: sast-smartai-repo-example
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: echo '${{ steps.get_repo_langs.outputs.data }}' | jq -r 'to_entries[] | [.[]] | join(",")' | tr '\n' '|' | xargs -I '{}' echo "REPO_LANG_INFO={}" >> $GITHUB_ENV
+
+      - name: Strip owner from repo eg Contrast-Security-Inc/sast-smartai-repo-example
+        run: echo "REPO_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
+
+      - name: Determine branch name if PR
+        if: github.event_name == 'pull_request'
+        run: echo "BRANCH_NAME=${{ github.head_ref }} " >> $GITHUB_ENV
+
+      - name: Determine branch name if direct push
+        if: github.event_name != 'pull_request'
+        run: echo "BRANCH_NAME=${{ github.ref_name }} " >> $GITHUB_ENV
+
+      - name: List env vars
+        run: "env | sort"
+
+      - name: Run SmartAI container
+        uses: addnab/docker-run-action@v3
+        with:
+          registry: contrastsecurity-docker-harmony-releases.jfrog.io
+          username: ${{ secrets.CONTRAST_ARTIFACTORY_USER }}
+          password: ${{ secrets.CONTRAST_ARTIFACTORY_PASSWORD }}
+          image:  contrastsecurity-docker-harmony-releases.jfrog.io/sast-smartai:latest
+          options: -v ${{ GITHUB.WORKSPACE }}:/var/app
+            -e LOGLEVEL=DEBUG
+            -e REPO_NAME=Paddy-testing-demo
+            -e REPO_LANG_INFO=${{ env.REPO_LANG_INFO }}
+            -e REPO_HTTP_URL=${{ GITHUB.SERVER_URL }}/${{ GITHUB.REPOSITORY }}
+            -e BRANCH_NAME=${{ env.BRANCH_NAME }}
+            -e DEFAULT_BRANCH=${{ github.event.repository.default_branch }}
+            -e APPLICATION_NAME=${{ env.REPO_NAME }}
+            -e COMMIT_HASH=${{ GITHUB.SHA }}
+            -e COMMITTER=${{ GITHUB.TRIGGERING_ACTOR }}
+            -e TAG=${{ GITHUB.REF }}
+            -e RUN_ID=${{ GITHUB.RUN_ID }}
+            -e WORKFLOW_ID=${{ GITHUB.WORKFLOW_SHA }}
+            -e CONTRAST_BASE_URL=https://teamserver-staging.contsec.com
+            -e CONTRAST_API_KEY=${{ secrets.STG_SMARTAI_ENABLED_ORG_API_KEY }}
+            -e CONTRAST_AUTHORIZATION=${{ secrets.STG_SMARTAI_ENABLED_ORG_AUTH }}
+            -e CONTRAST_ORG_ID=5deb031c-8a39-4d16-bc9f-f3736024b3b5
+            -e APPLICATION_DIR=/var/app
+          # entrypoint script not invoked by docker-run-action
+          run: /usr/app/smartai.py
