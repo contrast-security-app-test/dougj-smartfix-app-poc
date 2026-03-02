@@ -223,13 +223,13 @@ jobs:
       - name: Run Smart-SCA
         uses: docker://dougjeremias489/contrast-sca-cli
         env:
-          CONTRAST_GITHUB_APP_TS_URL: ${{ inputs.contrast_host }}
-          CONTRAST_GITHUB_APP_ORG_ID: ${{ inputs.contrast_org_id }}
-          CONTRAST_GITHUB_APP_INSTALLATION_ID: ${{ inputs.github_app_installation_id }}
-          CONTRAST_GITHUB_APP_API_KEY: ${{ secrets.CONTRAST_API_KEY }}
-          CONTRAST_GITHUB_APP_AUTHORIZATION_KEY: ${{ secrets.CONTRAST_AUTHORIZATION_KEY }}
-          GITHUB_SERVER_URL: ${{ inputs.repo_url }}
-          GITHUB_REPOSITORY: ${{ inputs.repo_name }}
+          CONTRAST_HOST:                 ${{ inputs.contrast_host }}
+          CONTRAST_ORG_ID:               ${{ inputs.contrast_org_id }}
+          CONTRAST_APP_INSTALLATION_ID:  ${{ inputs.github_app_installation_id }}
+          CONTRAST_API_KEY:              ${{ secrets.CONTRAST_API_KEY }}
+          CONTRAST_AUTHORIZATION:        ${{ secrets.CONTRAST_AUTHORIZATION_KEY }}
+          GITHUB_SERVER_URL:             ${{ inputs.repo_url }}
+          GITHUB_REPOSITORY:             ${{ inputs.repo_name }}
 
   run-smartfix:
     name: Run SmartFix
