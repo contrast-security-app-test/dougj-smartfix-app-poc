@@ -30,14 +30,57 @@ jobs:
         aws-region: ${{ vars.AWS_REGION }}
         #output-credentials: true
 
+  identify-app:
+    name: Resolve Contrast Application
+    runs-on: ubuntu-latest
+    outputs:
+      app_id: ${{ steps.resolve.outputs.app_id }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKERHUB_PAT }}" | \
+            docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Pull module-identifier image
+        run: docker pull contrast/module-identifier:v1
+
+      - name: Resolve CONTRAST_APP_ID
+        id: resolve
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/repo" \
+            -v "$(dirname $GITHUB_ENV):$(dirname $GITHUB_ENV)" \
+            -e GITHUB_ENV="$GITHUB_ENV" \
+            -e CONTRAST_HOST_NAME="${{ vars.CONTRAST_GITHUB_APP_HOST_URL }}" \
+            -e CONTRAST_API_KEY="${{ secrets.CONTRAST_GITHUB_APP_API_KEY }}" \
+            -e CONTRAST_AUTH_TOKEN="${{ secrets.CONTRAST_GITHUB_APP_AUTH_HEADER }}" \
+            -e CONTRAST_ORG_ID="${{ vars.CONTRAST_GITHUB_APP_ORG_ID }}" \
+            contrast/module-identifier:v1 \
+            /repo --single --debug
+
+          if grep -q '^CONTRAST_APP_ID=' "$GITHUB_ENV" 2>/dev/null; then
+            app_id=$(grep '^CONTRAST_APP_ID=' "$GITHUB_ENV" | cut -d= -f2-)
+            echo "app_id=$app_id" >> "$GITHUB_OUTPUT"
+            echo "Resolved CONTRAST_APP_ID: $app_id"
+          fi
+
+      - name: Fail fast if no CONTRAST_APP_ID
+        if: ${{ steps.resolve.outputs.app_id == '' }}
+        run: |
+          echo "::error::Module identifier could not resolve a Contrast application for this repository."
+          exit 1
+
   call-contrast-orchestrator:
     name: Call Contrast Smart Orchestrator
+    needs: identify-app
     uses: contrast-security-app-test/dougj-smartfix-app-poc/.github/workflows/contrast-orchestrator.yml@main
     with:
       contrast_host: ${{ vars.CONTRAST_GITHUB_APP_HOST_URL }}
       contrast_org_id: ${{ vars.CONTRAST_GITHUB_APP_ORG_ID }}
-      # Smartfix orchestration inputs
-      contrast_app_id: ${{ vars.CONTRAST_GITHUB_APP_ID }}
+      contrast_app_id: ${{ needs.identify-app.outputs.app_id }}
       base_branch: ${{ github.event.repository.default_branch }}
       build_command: 'echo "No build command specified."'
       formatting_command: ''
