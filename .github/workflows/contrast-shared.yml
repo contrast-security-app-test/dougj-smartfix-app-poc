@@ -47,7 +47,7 @@ jobs:
       - name: Pull module-identifier image
         run: docker pull contrast/module-identifier:v1
 
-      - name: Resolve CONTRAST_APP_ID
+      - name: Resolve Contrast Application
         id: resolve
         run: |
           docker run --rm \
@@ -59,12 +59,19 @@ jobs:
             -e CONTRAST_AUTH_TOKEN="${{ secrets.CONTRAST_GITHUB_APP_AUTH_HEADER }}" \
             -e CONTRAST_ORG_ID="${{ vars.CONTRAST_GITHUB_APP_ORG_ID }}" \
             contrast/module-identifier:v1 \
-            /repo --single --debug
+            /repo --single --debug 2>&1 | tee /tmp/module-identifier-output.txt
+
+          echo "--- module-identifier full output ---"
+          cat /tmp/module-identifier-output.txt
+          echo "--- end output ---"
 
           if grep -q '^CONTRAST_APP_ID=' "$GITHUB_ENV" 2>/dev/null; then
             app_id=$(grep '^CONTRAST_APP_ID=' "$GITHUB_ENV" | cut -d= -f2-)
+            app_name=$(grep '^CONTRAST_APP_NAME=' "$GITHUB_ENV" | cut -d= -f2-)
             echo "app_id=$app_id" >> "$GITHUB_OUTPUT"
+            echo "app_name=$app_name" >> "$GITHUB_OUTPUT"
             echo "Resolved CONTRAST_APP_ID: $app_id"
+            echo "Resolved CONTRAST_APP_NAME: $app_name"
           fi
 
       - name: Fail fast if no CONTRAST_APP_ID
